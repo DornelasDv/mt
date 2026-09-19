@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Painel de Iniciativas</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#6347b5">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Painel">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:opsz,wght@9..144,700;9..144,800&amp;display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#172554; --violet:#6d4cc7; --coral:#ef6f61; --paper:#f7f8ff; color-scheme:light; }
+    * { box-sizing:border-box; }
+    body.theme-dark { --ink:#e8eefc; --paper:#10172b; background:#10172b; color:#e8eefc; color-scheme:dark; }
+    body.theme-dark main { background:#10172b; }
+    body.theme-dark main section { background:#18233d !important; border-color:#314467 !important; }
+    body.theme-dark .bg-white, body.theme-dark .task-card { background:#1d2945 !important; color:#e8eefc; }
+    body.theme-dark input, body.theme-dark select, body.theme-dark textarea { background:#111a30 !important; color:#e8eefc; border-color:#405477 !important; }
+    body.theme-dark .text-slate-600, body.theme-dark .text-slate-500, body.theme-dark .text-slate-700 { color:#b8c5dd !important; }
+    body.theme-dark .theme-toggle { background:#243454; color:#f8d47a; border-color:#58709b; }
+    .theme-toggle .theme-label-dark { display:none; }
+    body.theme-dark .theme-toggle .theme-label-light { display:none; }
+    body.theme-dark .theme-toggle .theme-label-dark { display:inline; }
+    .theme-toggle .moon-icon { display:none; }
+    body.theme-dark .theme-toggle .sun-icon { display:none; }
+    body.theme-dark .theme-toggle .moon-icon { display:inline-flex; }
+    * { box-sizing:border-box; }
+    body { margin:0; width:100%; font-family:"DM Sans",sans-serif; color:var(--ink); background:#f7f8ff; }
+    .display { font-family:"Fraunces",serif; }
+    .hero-glow { background:radial-gradient(circle at 88% 18%,rgba(255,192,159,.66),transparent 28%),radial-gradient(circle at 12% 100%,rgba(132,186,255,.55),transparent 34%),linear-gradient(128deg,#173b84 0%,#6347b5 55%,#9c55ad 100%); }
+    .panel-shadow { box-shadow:0 14px 34px rgba(55,59,125,.09); }
+    .task-card { transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease; }
+    .task-card:hover { transform:translateY(-2px); box-shadow:0 12px 24px rgba(48,55,114,.12); }
+    .dragging { opacity:.45; transform:scale(.98); }
+    .drop-target { border-top:3px solid #7c5ce0; }
+    .progress-fill { transition:width .45s ease; }
+    .modal-backdrop { background:rgba(16,24,55,.52); backdrop-filter:blur(5px); }
+    .fade-up { animation:fadeUp .48s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
+    :focus-visible { outline:3px solid #ffbc70; outline-offset:3px; }
+    .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+ </head>
+ <body data-template-id="__page-root" style="background: rgb(239, 246, 255);">
+  <header class="hero-glow w-full px-5 py-7 text-white md:px-10 md:py-9">
+   <div class="mx-auto max-w-7xl">
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+     <div class="fade-up">
+      <p data-template-id="eyebrow" class="canva-text mb-2 text-sm font-bold uppercase tracking-[.18em]" style="color: rgb(219, 234, 254); font-weight: 700; font-style: normal; font-size: 16px; letter-spacing: 0.12rem;">ORGANIZAÇÃO PESSOAL</p>
+      <h1 data-template-id="page-title" class="canva-text display max-w-2xl font-bold leading-tight" style="color: rgb(255, 255, 255); font-weight: 800; font-style: normal; font-size: 32px;">Painel de iniciativas</h1>
+      <p id="greeting" class="mt-3 text-lg font-medium" aria-live="polite"></p>
+      <p id="focus-message" class="mt-1 max-w-xl text-sm text-blue-100"></p>
+     </div>
+     <div class="flex flex-col items-stretch gap-4 sm:items-end"><button id="theme-toggle" type="button" class="theme-toggle inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white/20" aria-label="Alternar entre modo claro e modo escuro" aria-pressed="false"> <span class="sun-icon inline-flex" aria-hidden="true"><i data-lucide="sun" class="h-4 w-4"></i></span><span class="moon-icon inline-flex" aria-hidden="true"><i data-lucide="moon" class="h-4 w-4"></i></span><span data-template-id="theme-label-light" class="canva-text theme-label-light" style="color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 16px;">Modo claro</span><span data-template-id="theme-label-dark" class="canva-text theme-label-dark" style="color: rgb(248, 212, 122); font-weight: 700; font-style: normal; font-size: 16px;">Modo escuro</span> </button>
+      <div class="grid grid-cols-3 gap-3 text-center">
+       <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm"><strong id="hero-pending" class="block text-2xl">0</strong><span data-template-id="hero-pending-label" class="canva-text text-xs text-blue-100" style="color: rgb(219, 234, 254); font-weight: 400; font-style: normal; font-size: 16px;">pendentes</span>
+       </div>
+       <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm"><strong id="hero-done" class="block text-2xl">0</strong><span data-template-id="hero-done-label" class="canva-text text-xs text-blue-100" style="color: rgb(219, 234, 254); font-weight: 400; font-style: normal; font-size: 16px;">concluídas</span>
+       </div>
+       <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-sm"><strong id="hero-initiatives" class="block text-2xl">0</strong><span data-template-id="hero-initiatives-label" class="canva-text text-xs text-blue-100" style="color: rgb(219, 234, 254); font-weight: 400; font-style: normal; font-size: 16px;">iniciativas</span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </header>
+  <main class="w-full px-5 py-7 md:px-10">
+   <div class="mx-auto max-w-7xl space-y-8">
+    <section aria-labelledby="today-heading">
+     <div class="mb-3 flex items-center gap-2"><i data-lucide="sparkles" class="h-5 w-5 text-violet-600"></i>
+      <h2 data-template-id="today-heading" id="today-heading" class="canva-text font-bold" style="color: rgb(23, 37, 84); font-weight: 700; font-style: normal; font-size: 24px;">Visão de hoje</h2>
+     </div>
+     <div class="grid gap-4 sm:grid-cols-3">
+      <article data-template-id="summary-pending" class="canva-card panel-shadow rounded-2xl border border-blue-100 p-5" style="background: rgb(239, 246, 255);">
+       <p data-template-id="summary-pending-label" class="canva-text text-sm font-semibold" style="color: rgb(29, 78, 216); font-weight: 700; font-style: normal; font-size: 16px;">A fazer</p><strong id="pending-count" class="mt-2 block text-3xl font-bold">0</strong>
+      </article>
+      <article data-template-id="summary-complete" class="canva-card panel-shadow rounded-2xl border border-violet-100 p-5" style="background: rgb(245, 243, 255);">
+       <p data-template-id="summary-complete-label" class="canva-text text-sm font-semibold" style="color: rgb(109, 40, 217); font-weight: 700; font-style: normal; font-size: 16px;">Concluídas</p><strong id="complete-count" class="mt-2 block text-3xl font-bold">0</strong>
+      </article>
+      <article data-template-id="summary-due" class="canva-card panel-shadow rounded-2xl border border-orange-100 p-5" style="background: rgb(255, 247, 237);">
+       <p data-template-id="summary-due-label" class="canva-text text-sm font-semibold" style="color: rgb(194, 65, 12); font-weight: 700; font-style: normal; font-size: 16px;">Com prazo hoje</p><strong id="due-count" class="mt-2 block text-3xl font-bold">0</strong>
+      </article>
+     </div>
+    </section>
+    <section aria-labelledby="initiatives-heading" class="rounded-3xl border border-indigo-100 bg-white p-5 panel-shadow md:p-7">
+     <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div>
+       <div class="flex items-center gap-2">
+        <i data-lucide="flag" class="h-5 w-5 text-violet-600"></i>
+        <h2 data-template-id="initiatives-heading" id="initiatives-heading" class="canva-text font-bold" style="color: rgb(23, 37, 84); font-weight: 700; font-style: normal; font-size: 24px;">Iniciativas</h2>
+       </div>
+       <p data-template-id="initiatives-helper" class="canva-text mt-1 text-sm" style="color: rgb(100, 116, 139); font-weight: 400; font-style: normal; font-size: 16px;">Objetivos maiores que dão direção ao seu trabalho.</p>
+      </div><button id="add-initiative" type="button" data-template-id="add-initiative-button" class="canva-button inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-bold shadow-sm transition hover:-translate-y-0.5" style="background: rgb(91, 66, 176); color: rgb(255, 255, 255); font-weight: 700;"><i data-lucide="plus" class="h-4 w-4"></i><span data-template-id="add-initiative-label" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 16px;">Adicionar iniciativa</span></button>
+     </div>
+     <div class="mt-5 grid gap-3 md:grid-cols-3">
+      <div>
+       <label data-template-id="initiative-search-label" class="canva-text sr-only" for="initiative-search" style="font-weight: 400; font-style: normal; font-size: 16px;">Buscar iniciativas</label><input id="initiative-search" type="search" data-template-id="initiative-search" class="canva-input w-full rounded-xl border border-slate-200 px-3 py-2.5" placeholder="Buscar iniciativas" style="font-weight: 400; font-style: normal; font-size: 16px;">
+      </div>
+      <div>
+       <label data-template-id="initiative-status-label" class="canva-text sr-only" for="initiative-status-filter" style="font-weight: 400; font-style: normal; font-size: 16px;">Filtrar iniciativas por status</label><select id="initiative-status-filter" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5"><option value="">Todos os status</option><option>Em andamento</option><option>Planejada</option><option>Pausada</option><option>Concluída</option></select>
+      </div>
+      <div>
+       <label data-template-id="initiative-priority-label" class="canva-text sr-only" for="initiative-priority-filter" style="font-weight: 400; font-style: normal; font-size: 16px;">Filtrar iniciativas por prioridade</label><select id="initiative-priority-filter" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5"><option value="">Todas as prioridades</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
+      </div>
+     </div>
+     <div id="initiative-list" class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
+     <div id="initiative-empty" class="mt-5 hidden rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/50 px-5 py-9 text-center"><i data-lucide="folder-plus" class="mx-auto h-8 w-8 text-indigo-400"></i>
+      <p data-template-id="initiative-empty-text" class="canva-text mt-3 font-medium" style="color: rgb(79, 70, 165); font-weight: 400; font-style: normal; font-size: 16px;">Nenhuma iniciativa encontrada. Crie uma para começar.</p>
+     </div>
+    </section>
+    <section aria-labelledby="tasks-heading" class="rounded-3xl border border-indigo-100 bg-white p-5 panel-shadow md:p-7">
+     <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div>
+       <div class="flex items-center gap-2">
+        <i data-lucide="list-todo" class="h-5 w-5 text-coral-500"></i>
+        <h2 data-template-id="tasks-heading" id="tasks-heading" class="canva-text font-bold" style="color: rgb(23, 37, 84); font-weight: 700; font-style: normal; font-size: 24px;">A fazer</h2>
+       </div>
+       <p data-template-id="tasks-helper" class="canva-text mt-1 text-sm" style="color: rgb(100, 116, 139); font-weight: 400; font-style: normal; font-size: 16px;">Arraste para reordenar. Concluir uma tarefa também atualiza seu histórico.</p>
+      </div><button id="add-task" type="button" data-template-id="add-task-button" class="canva-button inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-bold shadow-sm transition hover:-translate-y-0.5" style="background: rgb(239, 111, 97); color: rgb(255, 255, 255); font-weight: 700;"><i data-lucide="plus" class="h-4 w-4"></i><span data-template-id="add-task-label" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 16px;">Adicionar tarefa</span></button>
+     </div>
+     <div class="mt-5 grid gap-3 md:grid-cols-2">
+      <div>
+       <label data-template-id="task-search-label" class="canva-text sr-only" for="task-search" style="font-weight: 400; font-style: normal; font-size: 16px;">Buscar tarefas</label><input id="task-search" type="search" data-template-id="task-search" class="canva-input w-full rounded-xl border border-slate-200 px-3 py-2.5" placeholder="Buscar tarefas" style="font-weight: 400; font-style: normal; font-size: 16px;">
+      </div>
+      <div>
+       <label data-template-id="task-initiative-label" class="canva-text sr-only" for="task-initiative-filter" style="font-weight: 400; font-style: normal; font-size: 16px;">Filtrar tarefas por iniciativa</label><select id="task-initiative-filter" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5"></select>
+      </div>
+     </div>
+     <div id="task-list" class="mt-5 space-y-3" aria-live="polite"></div>
+     <div id="task-empty" class="mt-5 hidden rounded-2xl border border-dashed border-coral-200 bg-orange-50/50 px-5 py-9 text-center"><i data-lucide="circle-check-big" class="mx-auto h-8 w-8 text-orange-400"></i>
+      <p data-template-id="task-empty-text" class="canva-text mt-3 font-medium" style="color: rgb(194, 65, 12); font-weight: 400; font-style: normal; font-size: 16px;">Sua lista está livre. Adicione uma tarefa ou celebre o ritmo.</p>
+     </div>
+    </section>
+    <section aria-labelledby="history-heading" class="rounded-3xl border border-indigo-100 bg-white p-5 panel-shadow md:p-7">
+     <div class="flex items-center gap-2">
+      <i data-lucide="history" class="h-5 w-5 text-emerald-600"></i>
+      <h2 data-template-id="history-heading" id="history-heading" class="canva-text font-bold" style="color: rgb(23, 37, 84); font-weight: 700; font-style: normal; font-size: 24px;">O que eu fiz</h2>
+     </div>
+     <p data-template-id="history-helper" class="canva-text mt-1 text-sm" style="color: rgb(100, 116, 139); font-weight: 400; font-style: normal; font-size: 16px;">Um histórico automático das entregas concluídas.</p>
+     <div id="history-list" class="mt-5 space-y-5"></div>
+     <div id="history-empty" class="mt-5 hidden rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/50 px-5 py-9 text-center"><i data-lucide="party-popper" class="mx-auto h-8 w-8 text-emerald-400"></i>
+      <p data-template-id="history-empty-text" class="canva-text mt-3 font-medium" style="color: rgb(4, 120, 87); font-weight: 400; font-style: normal; font-size: 16px;">As tarefas concluídas aparecerão aqui, organizadas por dia e iniciativa.</p>
+     </div>
+    </section>
+   </div>
+  </main>
+  <div id="form-modal" class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+   <form id="entry-form" class="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+    <div class="flex items-center justify-between gap-4">
+     <h2 id="modal-title" data-template-id="modal-title" class="canva-text font-bold" style="color: rgb(23, 37, 84); font-weight: 700; font-style: normal; font-size: 24px;">Nova iniciativa</h2><button id="close-modal" type="button" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100" aria-label="Fechar"><i data-lucide="x" class="h-5 w-5"></i></button>
+    </div>
+    <div id="initiative-fields" class="mt-5 space-y-4">
+     <div>
+      <label data-template-id="initiative-name-label" class="canva-text mb-1 block font-semibold" for="initiative-name" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 16px;">Nome da iniciativa</label><input id="initiative-name" class="w-full rounded-xl border border-slate-300 px-3 py-2.5">
+     </div>
+     <div>
+      <label data-template-id="initiative-description-label" class="canva-text mb-1 block font-semibold" for="initiative-description" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 16px;">Descrição curta</label><textarea id="initiative-description" rows="3" class="w-full rounded-xl border border-slate-300 px-3 py-2.5"></textarea>
+     </div>
+     <div>
+      <label data-template-id="initiative-status-form-label" class="canva-text mb-1 block font-semibold" for="initiative-form-status" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 16px;">Status</label><select id="initiative-form-status" class="w-full rounded-xl border border-slate-300 px-3 py-2.5"><option>Em andamento</option><option>Planejada</option><option>Pausada</option><option>Concluída</option></select>
+     </div>
+    </div>
+    <div id="task-fields" class="mt-5 hidden space-y-4">
+     <div>
+      <label data-template-id="task-name-label" class="canva-text mb-1 block font-semibold" for="task-name" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 16px;">Tarefa</label><input id="task-name" class="w-full rounded-xl border border-slate-300 px-3 py-2.5">
+     </div>
+     <div>
+      <label data-template-id="task-initiative-form-label" class="canva-text mb-1 block font-semibold" for="task-form-initiative" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 16px;">Vincular à iniciativa</label><select id="task-form-initiative" class="w-full rounded-xl border border-slate-300 px-3 py-2.5"></select>
+     </div>
+    </div>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+     <div>
+      <label data-template-id="priority-form-label" class="canva-text mb-1 block font-semibold" for="form-priority" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 16px;">Prioridade</label><select id="form-priority" class="w-full rounded-xl border border-slate-300 px-3 py-2.5"><option>Alta</option><option selected="">Média</option><option>Baixa</option></select>
+     </div>
+     <div>
+      <label data-template-id="due-date-label" class="canva-text mb-1 block font-semibold" for="form-due-date" style="color: rgb(51, 65, 85); font-weight: 600; font-style: normal; font-size: 16px;">Prazo opcional</label><input id="form-due-date" type="date" class="w-full rounded-xl border border-slate-300 px-3 py-2.5">
+     </div>
+    </div>
+    <p id="form-feedback" class="mt-4 min-h-5 text-sm text-rose-600" aria-live="polite"></p>
+    <div class="mt-4 flex justify-end gap-3"><button id="cancel-form" data-template-id="cancel-form-button" type="button" class="canva-button rounded-xl px-4 py-2.5 font-bold" style="background: rgb(226, 232, 240); color: rgb(51, 65, 85); font-weight: 700; font-style: normal; font-size: 16px;">Cancelar</button> <button id="save-form" data-template-id="save-form-button" type="submit" class="canva-button rounded-xl px-4 py-2.5 font-bold" style="background: rgb(91, 66, 176); color: rgb(255, 255, 255); font-weight: 700; font-style: normal; font-size: 16px;">Salvar</button>
+    </div>
+   </form>
+  </div>
+  <template id="initiative-template">
+   <article data-template-id="initiative-card" class="canva-card rounded-2xl border border-indigo-100 p-5">
+    <div class="flex items-start justify-between gap-3">
+     <div>
+      <h3 class="initiative-title font-bold"></h3>
+      <p class="initiative-description mt-1 text-sm text-slate-600"></p>
+     </div>
+     <div class="flex gap-1"><button type="button" class="edit-initiative rounded-lg p-2 text-violet-700 hover:bg-violet-50" aria-label="Editar iniciativa"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" class="delete-initiative rounded-lg p-2 text-rose-600 hover:bg-rose-50" aria-label="Excluir iniciativa"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+     </div>
+    </div>
+    <div class="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+     <span class="initiative-status rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700"></span><span class="initiative-priority rounded-full bg-orange-50 px-2.5 py-1 text-orange-700"></span><span class="initiative-date text-slate-500"></span>
+    </div>
+    <div class="mt-4">
+     <div class="mb-1 flex justify-between text-xs font-semibold text-slate-500">
+      <span>Progresso</span><span class="initiative-progress-label"></span>
+     </div>
+     <div class="h-2 overflow-hidden rounded-full bg-indigo-100">
+      <div class="initiative-progress progress-fill h-full rounded-full bg-violet-600"></div>
+     </div>
+     <p class="initiative-progress-empty mt-2 hidden text-xs font-semibold text-slate-500">Nenhuma tarefa vinculada</p>
+    </div>
+   </article>
+  </template>
+  <template id="task-template">
+   <article data-template-id="task-card" class="canva-card task-card flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4" draggable="true"><button type="button" class="drag-handle mt-1 cursor-grab text-slate-400" aria-label="Arrastar para reordenar"><i data-lucide="grip-vertical" class="h-5 w-5"></i></button> <input type="checkbox" class="task-check mt-1 h-5 w-5 accent-violet-600" aria-label="Concluir tarefa">
+    <div class="min-w-0 flex-1">
+     <h3 class="task-title font-bold"></h3>
+     <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+      <span class="task-initiative font-semibold text-violet-700"></span><span class="task-priority font-semibold"></span><span class="task-date text-slate-500"></span>
+     </div>
+     <div class="delete-confirm mt-3 hidden items-center gap-2 text-sm">
+      <span class="text-rose-700">Excluir esta tarefa?</span><button type="button" class="confirm-delete font-bold text-rose-700 underline">Excluir</button><button type="button" class="cancel-delete font-bold text-slate-600 underline">Cancelar</button>
+     </div>
+    </div>
+    <div class="flex gap-1">
+     <button type="button" class="edit-task rounded-lg p-2 text-slate-500 hover:bg-slate-100" aria-label="Editar tarefa"><i data-lucide="pencil" class="h-4 w-4"></i></button><button type="button" class="delete-task rounded-lg p-2 text-rose-600 hover:bg-rose-50" aria-label="Excluir tarefa"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+    </div>
+   </article>
+  </template>
+  <template id="history-template">
+   <div data-template-id="history-group" class="canva-panel rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+    <h3 class="history-date font-bold text-emerald-900"></h3>
+    <div class="history-items mt-3 space-y-2"></div>
+   </div>
+  </template>
+  <script>
+    /* === Camada local de dados (substitui o SDK do Canva) ===
+       O Canva Code depende de scripts internos (em /_sdk/...) que só existem
+       dentro do editor do Canva. Fora dele — como aqui no GitHub Pages —
+       esses scripts dão 404 e "window.dataSdk" nunca chega a existir. Era por
+       isso que salvar, editar e excluir paravam de funcionar assim que o
+       arquivo saía do Canva. Este bloco recria a mesma interface
+       (init/create/update/delete) usando o localStorage do navegador, então
+       tudo volta a responder sem depender de nada do Canva.
+       Importante: os dados agora ficam salvos no navegador de cada pessoa/
+       dispositivo (como um "salvar local"), não sincronizam entre
+       dispositivos como faziam dentro do Canva. */
+    (function () {
+      const STORAGE_KEY = "painel-iniciativas:records";
+      function loadRecords() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          console.error("Não foi possível ler os dados salvos:", e);
+          return [];
+        }
+      }
+      function saveRecords(list) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+          return true;
+        } catch (e) {
+          console.error("Não foi possível salvar os dados:", e);
+          return false;
+        }
+      }
+      function makeId() {
+        return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+      }
+      let store = loadRecords();
+      let handler = null;
+      function notify() {
+        saveRecords(store);
+        if (handler && handler.onDataChanged) handler.onDataChanged(store.map(r => ({ ...r })));
+      }
+      window.dataSdk = {
+        async init(h) {
+          handler = h;
+          await Promise.resolve();
+          notify();
+          return { isOk: true };
+        },
+        async create(data) {
+          const record = { ...data, __backendId: makeId() };
+          store.push(record);
+          notify();
+          return { isOk: true, record };
+        },
+        async update(record) {
+          const idx = store.findIndex(r => r.__backendId === record.__backendId);
+          if (idx === -1) return { isOk: false };
+          store[idx] = { ...store[idx], ...record };
+          notify();
+          return { isOk: true };
+        },
+        async delete(record) {
+          const idx = store.findIndex(r => r.__backendId === record.__backendId);
+          if (idx === -1) return { isOk: false };
+          store.splice(idx, 1);
+          notify();
+          return { isOk: true };
+        }
+      };
+    })();
+    /* === Fim da camada local de dados === */
+
+    let records = [], modalMode = "initiative", editingRecord = null, draggedId = null;
+    const $ = id => document.getElementById(id);
+    const fmtDate = iso => iso ? new Date(iso + (iso.length === 10 ? "T12:00:00" : "")).toLocaleDateString("pt-BR") : "";
+    const today = () => new Date().toISOString().slice(0,10);
+    const initiatives = () => records.filter(r => r.record_type === "initiative");
+    const tasks = () => records.filter(r => r.record_type === "task");
+    const openModal = (mode, record = null) => {
+      modalMode = mode; editingRecord = record;
+      $("entry-form").reset(); $("form-feedback").textContent = "";
+      $("initiative-fields").classList.toggle("hidden", mode !== "initiative");
+      $("task-fields").classList.toggle("hidden", mode !== "task");
+      $("modal-title").textContent = record ? (mode === "task" ? "Editar tarefa" : "Editar iniciativa") : (mode === "task" ? "Nova tarefa" : "Nova iniciativa");
+      fillInitiativeOptions();
+      if (record) {
+        if (mode === "initiative") { $("initiative-name").value=record.title; $("initiative-description").value=record.description || ""; $("initiative-form-status").value=record.status || "Em andamento"; }
+        else { $("task-name").value=record.title; $("task-form-initiative").value=record.initiative_id || ""; }
+        $("form-priority").value=record.priority || "Média"; $("form-due-date").value=record.due_date || "";
+      }
+      $("form-modal").classList.remove("hidden"); $("form-modal").classList.add("flex");
+      setTimeout(() => $(mode === "task" ? "task-name" : "initiative-name").focus(), 0);
+    };
+    const closeModal = () => { $("form-modal").classList.add("hidden"); $("form-modal").classList.remove("flex"); };
+
+    function fillInitiativeOptions() {
+      const selects = [$("task-form-initiative"), $("task-initiative-filter")];
+      selects.forEach((select, index) => {
+        const old = select.value;
+        select.innerHTML = index ? '<option value="">Todas as iniciativas</option>' : '<option value="">Sem iniciativa</option>';
+        initiatives().forEach(i => { const o=document.createElement("option"); o.value=i.__backendId; o.textContent=i.title; select.appendChild(o); });
+        select.value = old;
+      });
+    }
+    function render() {
+      const allTasks=tasks(), pending=allTasks.filter(t=>!t.completed), complete=allTasks.filter(t=>t.completed);
+      $("pending-count").textContent=$("hero-pending").textContent=pending.length;
+      $("complete-count").textContent=$("hero-done").textContent=complete.length;
+      $("hero-initiatives").textContent=initiatives().length;
+      $("due-count").textContent=pending.filter(t=>t.due_date && t.due_date <= today()).length;
+      const hour=new Date().getHours();
+      $("greeting").textContent=hour<12?"Bom dia! Vamos dar forma ao que importa.":hour<18?"Boa tarde! Um passo de cada vez.":"Boa noite! Feche o dia com clareza.";
+      $("focus-message").textContent=pending.length ? `Seu foco agora: ${pending[0].title}.` : "Tudo em dia. Use este espaço para planejar o próximo movimento.";
+      fillInitiativeOptions(); renderInitiatives(); renderTasks(); renderHistory(); lucide.createIcons();
+    }
+    function renderInitiatives() {
+      const list=$("initiative-list"), search=$("initiative-search").value.toLowerCase(), status=$("initiative-status-filter").value, priority=$("initiative-priority-filter").value;
+      list.innerHTML="";
+      const shown=initiatives().filter(i => (!search || i.title.toLowerCase().includes(search)) && (!status || i.status===status) && (!priority || i.priority===priority));
+      $("initiative-empty").classList.toggle("hidden",shown.length>0);
+      shown.forEach(i => {
+        const node=$("initiative-template").content.cloneNode(true), el=node.querySelector("article"), linked=tasks().filter(t=>t.initiative_id===i.__backendId), done=linked.filter(t=>t.completed).length, pct=linked.length?Math.round(done/linked.length*100):0;
+        el.querySelector(".initiative-title").textContent=i.title; el.querySelector(".initiative-description").textContent=i.description || "Sem descrição.";
+        el.querySelector(".initiative-status").textContent=i.status; el.querySelector(".initiative-priority").textContent=i.priority;
+        el.querySelector(".initiative-date").textContent=i.due_date ? "Prazo: "+fmtDate(i.due_date) : "";
+        el.querySelector(".initiative-progress").style.width=pct+"%";
+        el.querySelector(".initiative-progress-label").textContent=`${pct}%`;
+        el.querySelector(".initiative-progress-empty").classList.toggle("hidden",linked.length>0);
+        el.querySelector(".edit-initiative").onclick=()=>openModal("initiative",i); el.querySelector(".delete-initiative").onclick=()=>showInitiativeDelete(el,i); list.appendChild(node);
+      });
+    }
+    function renderTasks() {
+      const list=$("task-list"), search=$("task-search").value.toLowerCase(), initiative=$("task-initiative-filter").value;
+      list.innerHTML="";
+      const shown=tasks().filter(t=>!t.completed && (!search || t.title.toLowerCase().includes(search)) && (!initiative || t.initiative_id===initiative)).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+      $("task-empty").classList.toggle("hidden",shown.length>0);
+      shown.forEach(t => {
+        const node=$("task-template").content.cloneNode(true), el=node.querySelector("article"); el.dataset.id=t.__backendId;
+        el.querySelector(".task-title").textContent=t.title; el.querySelector(".task-initiative").textContent=t.initiative_name || "Sem iniciativa";
+        el.querySelector(".task-priority").textContent=t.priority; el.querySelector(".task-priority").className+=" "+(t.priority==="Alta"?"text-rose-600":t.priority==="Média"?"text-orange-600":"text-emerald-600");
+        el.querySelector(".task-date").textContent=t.due_date ? "Prazo: "+fmtDate(t.due_date) : "";
+        el.querySelector(".task-check").onchange=()=>toggleComplete(t,true);
+        el.querySelector(".edit-task").onclick=()=>openModal("task",t);
+        el.querySelector(".delete-task").onclick=()=>{el.querySelector(".delete-confirm").classList.remove("hidden");el.querySelector(".delete-confirm").classList.add("flex");};
+        el.querySelector(".cancel-delete").onclick=()=>{el.querySelector(".delete-confirm").classList.add("hidden");el.querySelector(".delete-confirm").classList.remove("flex");};
+        el.querySelector(".confirm-delete").onclick=()=>deleteRecord(t,el.querySelector(".confirm-delete"));
+        addDragEvents(el); list.appendChild(node);
+      });
+    }
+    function showInitiativeDelete(el, initiative) {
+      const linked=tasks().filter(t=>t.initiative_id===initiative.__backendId);
+      const box=document.createElement("div"); box.className="initiative-delete-confirm mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800";
+      box.innerHTML=linked.length?`<p class="font-semibold">Esta iniciativa tem ${linked.length} tarefa(s) vinculada(s). O que deseja fazer?</p><div class="mt-3 flex flex-wrap gap-2"><button type="button" class="remove-linked rounded-lg bg-rose-600 px-3 py-2 font-bold text-white">Excluir tarefas</button><button type="button" class="keep-linked rounded-lg bg-white px-3 py-2 font-bold text-slate-700">Manter sem iniciativa</button><button type="button" class="cancel-initiative-delete rounded-lg px-3 py-2 font-bold text-slate-600">Cancelar</button></div>`:`<p class="font-semibold">Excluir esta iniciativa?</p><div class="mt-3 flex gap-2"><button type="button" class="confirm-initiative-delete rounded-lg bg-rose-600 px-3 py-2 font-bold text-white">Excluir</button><button type="button" class="cancel-initiative-delete rounded-lg px-3 py-2 font-bold text-slate-600">Cancelar</button></div>`;
+      el.appendChild(box);
+      box.querySelector(".cancel-initiative-delete").onclick=()=>box.remove();
+      const remove=async deleteTasks=>{ box.querySelectorAll("button").forEach(b=>b.disabled=true); for(const task of linked){const result=deleteTasks?await window.dataSdk.delete(task):await window.dataSdk.update({...task,initiative_id:"",initiative_name:""}); if(!result.isOk){box.textContent="Não foi possível concluir a exclusão. Tente novamente.";return;}} const result=await window.dataSdk.delete(initiative); if(!result.isOk) box.textContent="Não foi possível excluir a iniciativa."; };
+      const removeButton=box.querySelector(".remove-linked"); if(removeButton) removeButton.onclick=()=>remove(true);
+      const keepButton=box.querySelector(".keep-linked"); if(keepButton) keepButton.onclick=()=>remove(false);
+      const confirm=box.querySelector(".confirm-initiative-delete"); if(confirm) confirm.onclick=()=>remove(false);
+    }
+    function renderHistory() {
+      const list=$("history-list"); list.innerHTML="";
+      const done=tasks().filter(t=>t.completed).sort((a,b)=>new Date(b.completed_at)-new Date(a.completed_at)); $("history-empty").classList.toggle("hidden",done.length>0);
+      const groups={}; done.forEach(t=>{const key=(t.completed_at||"").slice(0,10)||today(); (groups[key] ||= []).push(t);});
+      Object.entries(groups).forEach(([date,items])=> {
+        const node=$("history-template").content.cloneNode(true), group=node.querySelector("div"); group.querySelector(".history-date").textContent=fmtDate(date);
+        items.forEach(t=>{const row=document.createElement("div");row.className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 text-sm";row.innerHTML=`<div><strong>${escapeHtml(t.title)}</strong><span class="ml-2 text-violet-700">${escapeHtml(t.initiative_name||"Sem iniciativa")}</span></div><button type="button" class="rounded-lg px-2 py-1 font-bold text-emerald-700 hover:bg-emerald-100">Desfazer</button>`;row.querySelector("button").onclick=()=>toggleComplete(t,false);group.querySelector(".history-items").appendChild(row);}); list.appendChild(node);
+      });
+    }
+    const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+    async function toggleComplete(record, complete) {
+      const result=await window.dataSdk.update({...record,completed:complete,completed_at:complete?new Date().toISOString():"",status:complete?"Concluída":"A fazer"});
+      if(!result.isOk) $("form-feedback").textContent="Não foi possível atualizar esta tarefa.";
+    }
+    async function deleteRecord(record, button) {
+      button.disabled=true; button.textContent="Excluindo…"; const result=await window.dataSdk.delete(record);
+      if(!result.isOk){button.disabled=false;button.textContent="Excluir";}
+    }
+    function addDragEvents(el) {
+      el.addEventListener("dragstart",()=>{draggedId=el.dataset.id;el.classList.add("dragging");});
+      el.addEventListener("dragend",async()=>{
+        el.classList.remove("dragging");
+        document.querySelectorAll(".drop-target").forEach(x=>x.classList.remove("drop-target"));
+        const order=[...$("task-list").children];
+        await Promise.all(order.map((node,i)=>{
+          const r=records.find(x=>x.__backendId===node.dataset.id);
+          if(r && r.sort_order!==i) return window.dataSdk.update({...r,sort_order:i});
+          return Promise.resolve();
+        }));
+      });
+      el.addEventListener("dragover",e=>{e.preventDefault();el.classList.add("drop-target");});
+      el.addEventListener("dragleave",()=>el.classList.remove("drop-target"));
+      el.addEventListener("drop",e=>{e.preventDefault();el.classList.remove("drop-target");const drag=[...$("task-list").children].find(x=>x.dataset.id===draggedId);if(drag&&drag!==el)$("task-list").insertBefore(drag,el);});
+    }
+
+    const themeToggle=$("theme-toggle");
+    function applyTheme(theme) {
+      const dark=theme==="dark";
+      document.body.classList.toggle("theme-dark",dark);
+      document.documentElement.style.colorScheme=dark?"dark":"light";
+      themeToggle.setAttribute("aria-pressed",String(dark));
+    }
+    applyTheme(localStorage.getItem("painel-theme")||"light");
+    themeToggle.addEventListener("click",()=>{
+      const next=document.body.classList.contains("theme-dark")?"light":"dark";
+      applyTheme(next); localStorage.setItem("painel-theme",next);
+    });
+
+    $("entry-form").addEventListener("submit",async e=>{
+      e.preventDefault();
+      const save=$("save-form"), feedback=$("form-feedback");
+      if(save.disabled) return;
+      const title=(modalMode==="task" ? $("task-name").value : $("initiative-name").value).trim();
+      if(!title){ feedback.textContent="Digite um título para continuar."; (modalMode==="task" ? $("task-name") : $("initiative-name")).focus(); return; }
+      save.disabled=true; save.textContent="Salvando…"; feedback.textContent="";
+      const initiative=initiatives().find(i=>i.__backendId===$("task-form-initiative").value);
+      const base={priority:$("form-priority").value||"Média",due_date:$("form-due-date").value||"",created_at:editingRecord?.created_at||new Date().toISOString()};
+      const data=modalMode==="initiative"?{...base,record_type:"initiative",title,description:$("initiative-description").value.trim(),initiative_id:"",initiative_name:"",status:$("initiative-form-status").value,completed:false,completed_at:"",sort_order:0}:{...base,record_type:"task",title,description:"",initiative_id:initiative?.__backendId||"",initiative_name:initiative?.title||"",status:editingRecord?.status||"A fazer",completed:editingRecord?.completed||false,completed_at:editingRecord?.completed_at||"",sort_order:editingRecord?.sort_order??tasks().length};
+      const result=editingRecord?await window.dataSdk.update({...editingRecord,...data}):await window.dataSdk.create(data);
+      save.disabled=false; save.textContent="Salvar";
+      if(result.isOk){ closeModal(); $("focus-message").textContent=modalMode==="task"?"Tarefa salva com sucesso.":"Iniciativa salva com sucesso."; }
+      else feedback.textContent="Não foi possível salvar. Tente novamente.";
+    });
+    $("add-initiative").onclick=()=>openModal("initiative"); $("add-task").onclick=()=>openModal("task");
+    $("close-modal").onclick=$("cancel-form").onclick=closeModal;
+    ["initiative-search","initiative-status-filter","initiative-priority-filter"].forEach(id=>$(id).addEventListener("input",renderInitiatives));
+    ["task-search","task-initiative-filter"].forEach(id=>$(id).addEventListener("input",renderTasks));
+    window.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+    const handler={onDataChanged(data){records=data;render();}};
+    (async()=>{const result=await window.dataSdk.init(handler);if(!result.isOk){$("focus-message").textContent="Não foi possível carregar seu painel agora.";} lucide.createIcons();})();
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch(err => console.error("Falha ao registrar o service worker:", err));
+      });
+    }
+  </script>
+ 
+</body></html>
